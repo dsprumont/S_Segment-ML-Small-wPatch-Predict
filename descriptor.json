@@ -1,0 +1,130 @@
+{
+  "command-line": "python run.py CYTOMINE_HOST CYTOMINE_PUBLIC_KEY CYTOMINE_PRIVATE_KEY CYTOMINE_ID_PROJECT CYTOMINE_ID_SOFTWARE CYTOMINE_ID_IMAGES CYTOMINE_ID_PREDICT_TERM DATASET_PATCH_SIZE MODEL_BATCH_SIZE POSTPROCESS_P_THRESHOLD",
+  "inputs": [
+    {
+      "name": "Cytomine host",
+      "description": "Cytomine server hostname",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_host",
+      "type": "String",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine public key",
+      "description": "Cytomine public key",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_public_key",
+      "type": "String",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine private key",
+      "description": "Cytomine private key",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_private_key",
+      "type": "String",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine project id",
+      "description": "Cytomine project id",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_id_project",
+      "type": "Number",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine software id",
+      "description": "Cytomine software id",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_id_software",
+      "type": "Number",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine image identifiers",
+      "description": "The identifiers of the images to process. If not specified all image of the project will be processed.",
+      "set-by-server": false,
+      "value-key": "@ID",
+      "optional": true,
+      "id": "cytomine_id_images",
+      "type": "ListDomain",
+      "uri": "/api/project/$currentProject$/imageinstance.json",
+      "uri-print-attribute": "instanceFilename",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine predict term identifier",
+      "description": "Identifier of a term to associate with the annotations of the segmented elements if the trained model was trained in binary. If the parameter is not provided, the uploaded annotations will not be associated a term. In case of multiclass training (i.e. not binary), this parameter is ignored.",
+      "set-by-server": false,
+      "value-key": "@ID",
+      "optional": true,
+      "id": "cytomine_id_predict_term",
+      "type": "Domain",
+      "uri": "/api/project/$currentProject$/term.json",
+      "uri-print-attribute": "name",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Training job identifier",
+      "description": "Identifier of the training job. The job should have the trained model attached (as a \"model.joblib\" attached file) and the properties \u0027binary\u0027, \u0027classes\u0027.",
+      "set-by-server": false,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_id_job",
+      "type": "Domain",
+      "uri": "/api/job.json?project=$currentProject$",
+      "uri-sort-attribute": "softwareName",
+      "uri-print-attribute": "softwareName",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Patch size",
+      "description": "The size of the square patches in pixels. Each processed image will be splitted into a set of patches that will be processed independently.",
+      "set-by-server": false,
+      "value-key": "@ID",
+      "default-value": 256,
+      "optional": false,
+      "id": "dataset_patch_size",
+      "type": "Number",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Batch size",
+      "description": "The size of each inference batch.",
+      "value-key": "@ID",
+      "default-value": 8,
+      "optional": false,
+      "id": "model_batch_size",
+      "type": "Number",
+      "command-line-flag": "--@id" 
+    },
+    {
+      "name": "Confidence threshold",
+      "description": "The confidence threshold for the predicted class (binary). If the prediction probability is above this value, the pixel is labelled as predicted term.",
+      "set-by-server": false,
+      "value-key": "@ID",
+      "default-value": 0.5,
+      "id": "postprocess_p_threshold",
+      "type": "Number",
+      "command-line-flag": "--@id"
+    }
+  ],
+  "name": "Segment-ML-Small-wPatch-Predict",
+  "description": "Small object segmentation based on deep neural networks",
+  "schema-version": "cytomine-0.1",
+  "container-image": {
+    "image": "dsprumont/S_Segment-ML-Small-wPatch-Predict",
+    "type": "singularity"
+  }
+}

@@ -1,9 +1,5 @@
 # installation dir
 
-# project dir
-datasets
-falsyn
-
 # output dir
 *output*
 local
@@ -13,7 +9,6 @@ local
 *.jpg
 *.png
 *.txt
-*.json
 *.diff
 
 # compilation and distribution
