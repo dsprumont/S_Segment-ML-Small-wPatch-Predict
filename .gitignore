@@ -1,0 +1,40 @@
+# installation dir
+
+# project dir
+datasets
+falsyn
+
+# output dir
+*output*
+local
+*credentials*
+*hidden_variable*
+
+*.jpg
+*.png
+*.txt
+*.json
+*.diff
+
+# compilation and distribution
+__pycache__
+
+# pytorch/python/numpy formats
+*.pth
+*.pkl
+*.npy
+
+# ipython/jupyter notebooks
+*.ipynb
+**/.ipynb_checkpoints/
+
+# Editor temporaries
+*.swn
+*.swo
+*.swp
+*~
+
+# editor settings
+.idea
+.vscode
+
