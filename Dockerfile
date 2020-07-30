@@ -2,14 +2,17 @@
 FROM continuumio/anaconda3
 
 # install deep learning/common dependencies
+# 1. Create virtual env to avoid some conflicts
 RUN conda create -n venv python=3.7
-RUN conda activate venv
+# 2. This line allows to "activate" the venv 
+SHELL ["conda", "run", "-n", "venv", "/bin/bash", "-c"]
+# 3. Import dependencies in venv
 RUN conda install numpy==1.17.4
 RUN conda install -c conda-forge pydicom==1.4.2
 RUN conda install pillow==6.2.1
 RUN conda install -c conda-forge shapely==1.7.0
 RUN conda install pytorch==1.3.1 torchvision==0.4.2 cudatoolkit=10.1 -c pytorch
-RUN conda install future==1.17.1
+RUN conda install future==0.17.1
 RUN conda install matplotlib==3.1.1
 
 # Install data/models dependencies
@@ -38,4 +41,5 @@ RUN mkdir -p /app/data/detection
 ADD data/detection/dataset.py /app/data/detection/dataset.py
 ADD data/detection/patch_dataset.py /app/data/detection/patch_dataset.py
 
-ENTRYPOINT ["python3", "/app/run.py"]
+# Run the entry point script within the virtual env
+ENTRYPOINT ["conda", "run", "-n", "venv", "python", "/app/run.py"]
