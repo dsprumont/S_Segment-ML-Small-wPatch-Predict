@@ -3,21 +3,13 @@ from __future__ import print_function
 import os
 import sys
 import json
-import argparse
-import numpy as np
+from shapely.geometry import Point, Polygon
 
 # deep learning denpendencies
+import torch
 from torch.utils.data import DataLoader
 
-# custom dependencies
-from models.fpn import FPN
-from data.detection.patch_dataset import PatchBasedDataset
-from utils import (
-    inference_on_segmentation,
-    compute_mean_and_std
-)
-
-from shapely.geometry import Point, Polygon
+# cytomine dependencies
 from cytomine import CytomineJob
 from cytomine.models import (
     ImageInstanceCollection,
@@ -26,72 +18,13 @@ from cytomine.models import (
     Job
 )
 
-
-def load_json(file_name):
-    """
-    Load .json specifed by file_name into a python dict.
-    """
-    try:
-        with open(file_name, 'r') as f:
-            return json.load(f)
-    except Exception as e:
-        raise argparse.ArgumentTypeError("Got error: {}".format(e))
-
-
-def str2floatlist(string):
-    """
-    Parse the given string into a list of float.
-
-    Examples:
-        0.5                     -> [0.5]
-        (0.7,0.8)               -> [0.7, 0.8]
-        (0.1:0.5:0.1)           -> [0.1, 0.2, 0.3, 0.4, 0.5]
-        (0.1,0.3:0.5:0.05,0.8)  -> [0.1, 0.3, 0.35, 0.40, 0.45, 0.5, 0.8]
-    """
-    ret = list()
-    if string.startswith('(') and string.endswith(')'):
-        print(string)
-        string = string[1:len(string)-1]
-        print(string)
-        strings = string.split(',')
-        print(strings)
-        for string in strings:
-            string = string.strip()
-            substr = string.split(':')
-            if len(substr) < 2:
-                try:
-                    string = float(substr[0])
-                except ValueError as e:
-                    raise argparse.ArgumentTypeError(
-                        "In {}, got error: {}".format(substr[0], e))
-                ret.append(string)
-            elif len(substr) == 3:
-                try:
-                    begin = float(substr[0])
-                    end = float(substr[1])
-                    step = float(substr[2])
-                    vec = np.arange(begin, end, step, dtype=np.float)
-                except ValueError as e:
-                    raise argparse.ArgumentTypeError(
-                        "In {}, got error: {}".format(string, e))
-                if len(vec) < 1:
-                    raise argparse.ArgumentTypeError(
-                        "In {}, got error: {}".format(
-                            string, "Step argument > End argument"))
-                else:
-                    ret.extend(list(vec))
-                    ret.append(end)
-            else:
-                raise argparse.ArgumentTypeError(
-                    "In {}, got error: {}".format(string, "Too many elements"))
-    else:
-        try:
-            string = float(string)
-        except ValueError as e:
-            raise argparse.ArgumentTypeError(
-                "In {}, got error: {}".format(string, e))
-        ret.append(string)
-    return ret
+# custom dependencies
+from models.fpn import FPN
+from data.detection.patch_dataset import PatchBasedDataset
+from utils import (
+    inference_on_segmentation,
+    compute_mean_and_std
+)
 
 
 def main(argv):
@@ -115,6 +48,9 @@ def main(argv):
             in_features=config['fpn_in_features'],
             out_features=config['fpn_out_features']
         )
+        model_dict = torch.load(config['weights'])
+        model.load_state_dict(model_dict['model'])
+        model.cuda()
 
         # Select images to process
         images = ImageInstanceCollection().fetch_with_filter(
@@ -152,7 +88,7 @@ def main(argv):
         # Prepare dataset and dataloader objects
         ImgTypeBits = {'.dcm': 16}
         channel_bits = ImgTypeBits.get(fext.lower(), 8)
-        mean, std = compute_mean_and_std(working_path, bits=channel_bits)
+        mean, std = compute_mean_and_std(img_path, bits=channel_bits)
 
         dataset = PatchBasedDataset(
             path=working_path,

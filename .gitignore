@@ -1,13 +1,14 @@
-# installation dir
-
-# output dir
-*output*
+# local dir
 local
-*credentials*
-*hidden_variable*
 
+# local file
+publish_descriptor.py
+
+# image formats
 *.jpg
 *.png
+*.dicom
+*.dcm
 *.txt
 *.diff
 

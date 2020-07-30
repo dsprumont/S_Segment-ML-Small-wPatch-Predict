@@ -76,19 +76,6 @@
       "command-line-flag": "--@id"
     },
     {
-      "name": "Training job identifier",
-      "description": "Identifier of the training job. The job should have the trained model attached (as a \"model.joblib\" attached file) and the properties \u0027binary\u0027, \u0027classes\u0027.",
-      "set-by-server": false,
-      "value-key": "@ID",
-      "optional": false,
-      "id": "cytomine_id_job",
-      "type": "Domain",
-      "uri": "/api/job.json?project=$currentProject$",
-      "uri-sort-attribute": "softwareName",
-      "uri-print-attribute": "softwareName",
-      "command-line-flag": "--@id"
-    },
-    {
       "name": "Patch size",
       "description": "The size of the square patches in pixels. Each processed image will be splitted into a set of patches that will be processed independently.",
       "set-by-server": false,
@@ -102,6 +89,7 @@
     {
       "name": "Batch size",
       "description": "The size of each inference batch.",
+      "set-by-server": false,
       "value-key": "@ID",
       "default-value": 8,
       "optional": false,
@@ -115,16 +103,17 @@
       "set-by-server": false,
       "value-key": "@ID",
       "default-value": 0.5,
+      "optional": false,
       "id": "postprocess_p_threshold",
       "type": "Number",
       "command-line-flag": "--@id"
     }
   ],
   "name": "Segment-ML-Small-wPatch-Predict",
-  "description": "Small object segmentation based on deep neural networks",
+  "description": "Detect small objects using FPN Segmentation network and tile-based dataloader",
   "schema-version": "cytomine-0.1",
   "container-image": {
-    "image": "dsprumont/S_Segment-ML-Small-wPatch-Predict",
+    "image": "dsprumont/s_segment-ml-small-wpatch-predict",
     "type": "singularity"
   }
 }
