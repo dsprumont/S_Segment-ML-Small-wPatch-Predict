@@ -5,4 +5,4 @@ It contains logic and configuration files (descriptor, DockerFile) necessary to 
 
 - [x] Add python code
 - [x] Add descriptor.json
-- [ ] Add DockerFile
+- [x] Add DockerFile

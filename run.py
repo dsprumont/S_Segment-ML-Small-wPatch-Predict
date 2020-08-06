@@ -20,11 +20,14 @@ from cytomine.models import (
 
 # custom dependencies
 from models.fpn import FPN
-from data.detection.patch_dataset import PatchBasedDataset
+from data.detection.patch_dataset import InferencePatchBasedDataset
 from utils import (
     inference_on_segmentation,
     compute_mean_and_std
 )
+
+# Global to set the device that handle pytorch DL computation
+_DEVICE = "cpu"
 
 
 def main(argv):
@@ -36,53 +39,51 @@ def main(argv):
         # Load pretrained model (assume the best of all)
         conn.job.update(progress=0,
                         statusComment="Loading segmentation model..")
-        with open(os.path.join(
-                base_path, "/resnet50b_fpn256/config.json")) as f:
+
+        with open("models/resnet50b_fpn256/config.json") as f:
             config = json.load(f)
         model = FPN.build_resnet_fpn(
-            name=config['model_name'],
-            input_size=conn.parameters.model_patch_size,  # must be / by 16
-            input_channels=1 if config['image_mode'] == 'grayscale' else 3,
-            output_channels=config['fpn_out_channels'],
-            num_classes=config['num_classes'],
-            in_features=config['fpn_in_features'],
-            out_features=config['fpn_out_features']
+            name=config['name'],
+            input_size=conn.parameters.dataset_patch_size,  # must be / by 16
+            input_channels=1 if config['input']['mode'] == 'grayscale' else 3,
+            output_channels=config['fpn']['out_channels'],
+            num_classes=2,  # legacy
+            in_features=config['fpn']['in_features'],
+            out_features=config['fpn']['out_features']
         )
-        model_dict = torch.load(config['weights'])
+        model_dict = torch.load(config['weights'],
+                                map_location=torch.device(_DEVICE))
         model.load_state_dict(model_dict['model'])
-        model.cuda()
+        model.to(_DEVICE)
 
         # Select images to process
         images = ImageInstanceCollection().fetch_with_filter(
             "project", conn.parameters.cytomine_id_project)
-        list_imgs = []
-        if conn.parameters.cytomine_id_images == 'all':
-            for image in images:
-                list_imgs.append(int(image.id))
-        else:
-            list_imgs = [int(id_img)
-                         for id_img in
-                         conn.parameters.cytomine_id_images.split(',')]
+
+        if conn.parameters.cytomine_id_images != 'all':
+            images = [_ for _ in images if _.id
+                      in map(lambda x: int(x.strip()),
+                             conn.parameters.cytomine_id_images.split(','))]
+        images_id = [image.id for image in images]
 
         # Download selected images into "working_directory"
         img_path = os.path.join(working_path, "images")
+        os.makedirs(img_path)
         for image in conn.monitor(
-                list_imgs, start=2, end=50, period=0.1,
+                images, start=2, end=50, period=0.1,
                 prefix="Downloading images into working directory.."):
             fname, fext = os.path.splitext(image.filename)
             if image.download(dest_pattern=os.path.join(
-                    img_path, "{}".format(image.filename))) is True:
-                os.rename(
-                    os.path.join(img_path, "{}".format(image.filename)),
-                    os.path.join(img_path, "{}{}".format(image.id, fext))
-                )
+                    img_path, "{}{}".format(image.id, fext))) is not True:
+
+                print("Failed to download image {}".format(image.filename))
 
         # create a file that lists all images (used by PatchBasedDataset
         conn.job.update(progress=50,
                         statusComment="Preparing data for execution..")
         images = os.listdir(img_path)
         images = list(map(lambda x: x+'\n', images))
-        with open(os.path.join(working_path), 'w') as f:
+        with open(os.path.join(working_path, 'images.txt'), 'w') as f:
             f.writelines(images)
 
         # Prepare dataset and dataloader objects
@@ -90,16 +91,14 @@ def main(argv):
         channel_bits = ImgTypeBits.get(fext.lower(), 8)
         mean, std = compute_mean_and_std(img_path, bits=channel_bits)
 
-        dataset = PatchBasedDataset(
+        dataset = InferencePatchBasedDataset(
             path=working_path,
             subset='images',
             patch_size=conn.parameters.dataset_patch_size,
-            mode=config['image_mode'],
+            mode=config['input']['mode'],
             bits=channel_bits,
             mean=mean,
-            std=std,
-            training=False,
-            filter='none'  # This script is meant for inference
+            std=std
         )
 
         dataloader = DataLoader(
@@ -108,7 +107,7 @@ def main(argv):
             drop_last=False,
             shuffle=False,
             num_workers=0,
-            collate_fn=PatchBasedDataset.collate_fn
+            collate_fn=InferencePatchBasedDataset.collate_fn
         )
 
         # Go over images
@@ -118,7 +117,7 @@ def main(argv):
             model, dataloader, conn.parameters.postprocess_p_threshold)
 
         for id_image in conn.monitor(
-                list_imgs, start=90, end=95,
+                images_id, start=90, end=95,
                 prefix="Deleting old annotations on images..", period=0.1):
             # Delete old annotations
             del_annotations = AnnotationCollection()
@@ -150,7 +149,7 @@ def main(argv):
                 annotations.append(Annotation(
                     location=annotation.wkt,
                     id_image=int(idx),
-                    id_terms=conn.parameters.cytomine_id_predict_term,
+                    id_terms=[conn.parameters.cytomine_id_predict_term],
                     id_project=conn.parameters.cytomine_id_project)
                 )
         annotations.save()

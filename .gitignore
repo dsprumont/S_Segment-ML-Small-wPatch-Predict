@@ -1,8 +1,9 @@
 # local dir
-local
 
 # local file
 publish_descriptor.py
+convert_weights.py
+Dockerfile_old
 
 # image formats
 *.jpg
@@ -19,6 +20,8 @@ __pycache__
 *.pth
 *.pkl
 *.npy
+*.tar 
+*.gz
 
 # ipython/jupyter notebooks
 *.ipynb

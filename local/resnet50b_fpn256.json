@@ -1,0 +1,14 @@
+{
+	"name": "resnet50b",
+	"weights": "/models/resnet50b_fpn256/weights.pth",
+	"fpn": 
+	{
+		"out_channels": 256,
+		"in_features": ["stem", "res2", "res3", "res4", "res5"],
+		"out_features": ["p5", "p4", "p3", "p2", "p1", "logits"]
+	},
+	"input":
+	{
+		"mode": "grayscale"
+	}
+}
