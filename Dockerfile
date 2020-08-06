@@ -20,9 +20,7 @@ RUN pip install torch==1.3.1 torchvision==0.4.2 -f https://download.pytorch.org/
 # ---------------------------------------------------#
 RUN mkdir -p /models/resnet50b_fpn256
 ADD local/resnet50b_fpn256.json /models/resnet50b_fpn256/config.json
-RUN wget --quiet --no-check-certificate -r \
-    'https://docs.google.com/uc?export=download&id=1RaWEfzjE9Tx3XbIm_oT2pt0bSJO8J8ox' \
-    -O /model/reset50b_fpn256/weights.pth
+RUN wget --quiet --no-check-certificate -r 'https://docs.google.com/uc?export=download&id=1RaWEfzjE9Tx3XbIm_oT2pt0bSJO8J8ox' -O /models/resnet50b_fpn256/weights.pth
 
 RUN chmod 444 /models/resnet50b_fpn256/config.json
 RUN chmod 444 /models/resnet50b_fpn256/weights.pth
