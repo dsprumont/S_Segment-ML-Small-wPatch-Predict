@@ -40,7 +40,8 @@ def main(argv):
         conn.job.update(progress=0,
                         statusComment="Loading segmentation model..")
 
-        with open("models/resnet50b_fpn256/config.json") as f:
+        with open(os.path.join(
+                base_path, "models/resnet50b_fpn256/config.json")) as f:
             config = json.load(f)
         model = FPN.build_resnet_fpn(
             name=config['name'],
