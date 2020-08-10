@@ -27,7 +27,7 @@ from utils import (
 )
 
 # Global to set the device that handle pytorch DL computation
-_DEVICE = "cpu"
+_DEVICE = 'cpu'
 
 
 def main(argv):
@@ -51,10 +51,10 @@ def main(argv):
             in_features=config['fpn']['in_features'],
             out_features=config['fpn']['out_features']
         )
+        model.to(_DEVICE)
         model_dict = torch.load(config['weights'],
                                 map_location=torch.device(_DEVICE))
         model.load_state_dict(model_dict['model'])
-        model.to(_DEVICE)
 
         # Select images to process
         images = ImageInstanceCollection().fetch_with_filter(
